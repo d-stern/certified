@@ -141,6 +141,7 @@ default_bits = $BITS
 default_md = sha256
 distinguished_name = dn
 prompt = no
+req_extensions = x509_extensions
 EOF
     if [ "$SAN_DNS" -o "$SAN_IP" ]
     then cat <<EOF
