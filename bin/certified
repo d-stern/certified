@@ -11,6 +11,7 @@
 #/   --issuer-name=<issuer-name> filename of the alternative CA certificate (default derived from the alternative CA common name)
 #/   --name=<name>               filename to use (default derived from the certificate common name)
 #/   --no-sign                   do not sign the certificate; stop with a certificate signing request
+#/   --san-wildcard-only         only create wildcard SAN off of the CN provided
 #/   --password=<password>       password for the private key (implies --encrypt)
 #/   --revoke                    revoke an existing certificate
 #/   --self-signed               generate a self-signed certificate instead of using the CA
@@ -48,6 +49,7 @@ do
         --name) NAME="$2" shift 2;;
         --name=*) NAME="$(echo "$1" | cut -d"=" -f"2-")" shift;;
         --no-sign) NO_SIGN="--no-sign" shift;;
+        --san-wildcard-only) SAN_WILDCARD="--san-wildcard-only" shift;;
         --password) PASSWORD="$2" shift 2;;
         --password=*) PASSWORD="$(echo "$1" | cut -d"=" -f"2-")" shift;;
         --revoke) REVOKE="--revoke" shift;;
@@ -84,7 +86,13 @@ then
     exit
 fi
 
-certified-csr --bits="$BITS" $CA --days="$DAYS" --db="." $ENCRYPT --issuer="$ISSUER" --issuer-name="$ISSUER_NAME" --name="$NAME" --password="$PASSWORD" C="$C" CN="$CN" L="$L" O="$O" OU="$OU" ST="$ST" $SAN
+
+if [ "$SAN_WILDCARD" ] 
+then
+    certified-csr --bits="$BITS" $CA --days="$DAYS" --db="." $ENCRYPT --issuer="$ISSUER" --issuer-name="$ISSUER_NAME" --name="$NAME" --password="$PASSWORD" --san-wildcard-only C="$C" CN="$CN" L="$L" O="$O" OU="$OU" ST="$ST" $SAN
+else
+    certified-csr --bits="$BITS" $CA --days="$DAYS" --db="." $ENCRYPT --issuer="$ISSUER" --issuer-name="$ISSUER_NAME" --name="$NAME" --password="$PASSWORD" C="$C" CN="$CN" L="$L" O="$O" OU="$OU" ST="$ST" $SAN
+fi
 
 if [ -z "$NO_SIGN" ]
 then certified-crt --days="$DAYS" --db="." --name="$NAME" --ca-password="$CA_PASSWORD" $SELF_SIGNED CN="$CN"

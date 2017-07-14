@@ -3,6 +3,7 @@
 #/ Usage: certified-csr [--bits=<bits>] [--ca] [--crl-url=<crl-url>] [--days=<days>] [--db=<db>] [--encrypt] [--issuer=<issuer>] [--issuer-name=<issuer-name>] [--name=<name>] [--ocsp-url=<ocsp-url>] [--password=<password>] [C=<country>] [ST=<state>] [L=<locality>] [O=<organization>] CN=<common-name> [+<dns>[...]] [+<ip>[...]]
 #/   --bits=<bits>               bits to use for the private key (defaults to 2048)
 #/   --ca                        request that this certificate be a CA certificate
+#/   --san-wildcard-only         Only creates a wildcard SAN based off the CN provided
 #/   --crl-url=<crl-url>         CRL distribution URL for the intermediate CA
 #/   --days=<days>               days until the certificate expires (defaults to 3650)
 #/   --db=<db>                   OpenSSL database directory
@@ -33,6 +34,7 @@ do
         --bits) BITS="$2" shift 2;;
         --bits=*) BITS="$(echo "$1" | cut -d"=" -f"2-")" shift;;
         --ca) CA="--ca" shift;;
+        --san-wildcard-only) SAN_WILDCARD="--san-wildcard-only" shift;;
         --crl-url) CRL_URL="$2" shift 2;;
         --crl-url=*) CRL_URL="$(echo "$1" | cut -d"=" -f"2-")" shift;;
         --days) DAYS="$2" shift 2;;
@@ -151,7 +153,11 @@ EOF
     I=1
     for DNS in $SAN_DNS
     do
+        if [ "$SAN_WILDCARD" ]
+        then echo "DNS.$I = *.$DNS"
+        else
         echo "DNS.$I = $DNS"
+        fi
         I=$(($I + 1))
     done
     I=1
